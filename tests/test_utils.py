@@ -108,6 +108,20 @@ class UtilsTest(unittest.TestCase):
         self.assertEqual(self.password, section[self.password_key])
         self.assertEqual(self.receiver, section[self.receiver_key])
 
+    @patch('os.makedirs', return_value=None)
+    @patch('pdfebc_core.utils.open')
+    def test_write_email_config_missing_dir(self, mock_open, mock_makedirs):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config_path = tempfile.NamedTemporaryFile(dir=tmpdir).name
+        mock_open.return_value.__enter__.return_value.name = 'badonkadonk'
+        mock_config = Mock()
+        pdfebc_core.utils.write_config(mock_config, config_path)
+        mock_makedirs.assert_called_once_with(os.path.dirname(config_path))
+        mock_open.assert_called_once_with(config_path, 'w', encoding='utf-8')
+
+
+
+
     def test_read_valid_email_config(self):
         self.valid_config.write(self.temp_config_file)
         self.temp_config_file.flush()
@@ -198,6 +212,13 @@ class UtilsTest(unittest.TestCase):
         self.temp_config_file.close()
         config_path = self.temp_config_file.name
         self.assertFalse(pdfebc_core.utils.valid_config_exists(config_path))
+
+    def test_valid_config_exists_with_only_sections(self):
+        sections_string = "[{}]\n[{}]".format(self.email_section_key,
+                                          self.default_section_key)
+        self.temp_config_file.write(sections_string)
+        self.temp_config_file.close()
+        self.assertFalse(pdfebc_core.utils.valid_config_exists(self.temp_config_file.name))
 
     def test_if_callable_call_with_formatted_string_too_few_args(self):
         three_args_formattable_string = "test {} test {} test {}"
@@ -300,7 +321,7 @@ class UtilsTest(unittest.TestCase):
         self.assertEqual({self.default_section_key}, missing_sections)
         self.assertEqual(expected_missing_email_options, malformed_entries[self.email_section_key])
 
-    def test_confg_to_string(self):
+    def test_config_to_string(self):
         gs_binary_default = "gs"
         section_string = "[{}]"
         option_string = "{} = {}"
@@ -314,3 +335,19 @@ class UtilsTest(unittest.TestCase):
         print(expected_output)
         actual_output = pdfebc_core.utils.config_to_string(config)
         self.assertEqual(expected_output, actual_output)
+
+    def test_try_get_conf_from_missing_section(self):
+        config_dict = {self.email_section_key: {self.user_key: self.user}}
+        non_existing_section = "This section does not exist"
+        equally_non_existing_attribute = "This attribute doesn't exist either"
+        with self.assertRaises(pdfebc_core.utils.ConfigurationError) as context:
+            pdfebc_core.utils.try_get_conf(config_dict, non_existing_section,
+                                           equally_non_existing_attribute)
+
+    def test_try_get_conf_from_section_with_missing_attribute(self):
+        config_dict = {self.email_section_key: {self.user_key: self.user}}
+        non_existing_section = "Badonkadonk. This doesn't exist"
+        with self.assertRaises(pdfebc_core.utils.ConfigurationError) as context:
+            pdfebc_core.utils.try_get_conf(config_dict, self.email_section_key,
+                                           non_existing_section)
+
