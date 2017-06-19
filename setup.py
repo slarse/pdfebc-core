@@ -19,6 +19,7 @@ setup(
     author='Simon Larsén',
     author_email='slarse@kth.se',
     url='https://github.com/slarse/pdfebc-core',
+    download_url='https://github.com/slarse/pdfebc-core/archive/v0.1.0.tar.gz',
     license=license,
     packages=find_packages(exclude=('tests', 'docs')),
     tests_require=test_requirements,
