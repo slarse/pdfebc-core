@@ -1,6 +1,8 @@
 pdfebc-core - Core functions for the pdfebc tools
 *************************************************
 
+`Docs`_
+
 .. image:: https://travis-ci.org/slarse/pdfebc-core.svg?branch=master
     :target: https://travis-ci.org/slarse/pdfebc-core
     :alt: Build Status
@@ -45,6 +47,7 @@ Requirements
 ============
 Aside from the Python omdules listed in `requirements.txt`_, the following requirements must be
 met:
+
 * Python 3.6
     - Strictly speaking, 3.5 should also work fine, but the tests use 3.6 features so the
       build is only tested for 3.6.
