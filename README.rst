@@ -106,6 +106,7 @@ I am currently not looking for contributions. At this point, this is a practice 
 and even if I were looking for outside help the test suite is nowhere near comprehensive enough
 for that yet. Sorry!
 
+.. _App password: https://support.google.com/accounts/answer/185833?hl=en
 .. _license file: LICENSE
 .. _sample configuration: config.cnf
 .. _requirements.txt: requirements.txt
