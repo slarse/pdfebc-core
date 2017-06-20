@@ -22,19 +22,20 @@ class UtilsTest(unittest.TestCase):
         cls.receiver = 'test_receiver'
         cls.smtp_server = 'test_server'
         cls.smtp_port = 999
-        cls.user_key = pdfebc_core.utils.USER_KEY
-        cls.password_key = pdfebc_core.utils.PASSWORD_KEY
-        cls.receiver_key = pdfebc_core.utils.RECEIVER_KEY
-        cls.smtp_server_key = pdfebc_core.utils.SMTP_SERVER_KEY
-        cls.smtp_port_key = pdfebc_core.utils.SMTP_PORT_KEY
-        cls.gs_binary_default_key = pdfebc_core.utils.GS_DEFAULT_BINARY_KEY
-        cls.out_dir_default_key = pdfebc_core.utils.OUT_DEFAULT_DIR_KEY
-        cls.src_dir_default_key = pdfebc_core.utils.SRC_DEFAULT_DIR_KEY
-        cls.email_section_key = pdfebc_core.utils.EMAIL_SECTION_KEY
-        cls.default_section_key = pdfebc_core.utils.DEFAULT_SECTION_KEY
+        cls.user_key = pdfebc_core.config_utils.USER_KEY
+        cls.password_key = pdfebc_core.config_utils.PASSWORD_KEY
+        cls.receiver_key = pdfebc_core.config_utils.RECEIVER_KEY
+        cls.smtp_server_key = pdfebc_core.config_utils.SMTP_SERVER_KEY
+        cls.smtp_port_key = pdfebc_core.config_utils.SMTP_PORT_KEY
+        cls.gs_binary_default_key = pdfebc_core.config_utils.GS_DEFAULT_BINARY_KEY
+        cls.out_dir_default_key = pdfebc_core.config_utils.OUT_DEFAULT_DIR_KEY
+        cls.src_dir_default_key = pdfebc_core.config_utils.SRC_DEFAULT_DIR_KEY
+        cls.email_section_key = pdfebc_core.config_utils.EMAIL_SECTION_KEY
+        cls.default_section_key = pdfebc_core.config_utils.DEFAULT_SECTION_KEY
         cls.email_section_keys = {cls.user_key, cls.password_key, cls.receiver_key,
                                   cls.smtp_server_key, cls.smtp_port_key}
-        cls.default_section_keys = {cls.gs_binary_default_key, cls.src_dir_default_key, cls.out_dir_default_key}
+        cls.default_section_keys = {cls.gs_binary_default_key, cls.src_dir_default_key,
+                                    cls.out_dir_default_key}
         cls.section_keys = {cls.email_section_key: cls.email_section_keys,
                             cls.default_section_key: cls.default_section_keys}
         cls.gs_binary_default = 'gs'
@@ -52,18 +53,18 @@ class UtilsTest(unittest.TestCase):
             cls.attachment_filenames.append(file.name)
             file.close()
         cls.valid_config = configparser.ConfigParser()
-        cls.valid_config[pdfebc_core.utils.EMAIL_SECTION_KEY] = ({
+        cls.valid_config[pdfebc_core.config_utils.EMAIL_SECTION_KEY] = ({
             cls.user_key: cls.user,
             cls.password_key: cls.password,
             cls.receiver_key: cls.receiver,
             cls.smtp_server_key: cls.smtp_server,
             cls.smtp_port_key: cls.smtp_port})
-        cls.valid_config[pdfebc_core.utils.DEFAULT_SECTION_KEY] = {
+        cls.valid_config[pdfebc_core.config_utils.DEFAULT_SECTION_KEY] = {
             cls.gs_binary_default_key: cls.gs_binary_default,
             cls.src_dir_default_key: cls.src_dir_default,
             cls.out_dir_default_key: cls.out_dir_default}
         cls.invalid_config = configparser.ConfigParser()
-        cls.invalid_config[pdfebc_core.utils.EMAIL_SECTION_KEY] = {
+        cls.invalid_config[pdfebc_core.config_utils.EMAIL_SECTION_KEY] = {
             cls.user_key: cls.user,
             cls.password_key: cls.password}
 
@@ -80,12 +81,12 @@ class UtilsTest(unittest.TestCase):
             self.user_key: self.user,
             self.password_key: self.password,
             self.receiver_key: self.receiver,
-            self.smtp_server_key: pdfebc_core.utils.DEFAULT_SMTP_SERVER,
-            self.smtp_port_key: str(pdfebc_core.utils.DEFAULT_SMTP_PORT)},
+            self.smtp_server_key: pdfebc_core.config_utils.DEFAULT_SMTP_SERVER,
+            self.smtp_port_key: str(pdfebc_core.config_utils.DEFAULT_SMTP_PORT)},
            {self.gs_binary_default_key: self.gs_binary_default,
             self.src_dir_default_key: self.src_dir_default,
             self.out_dir_default_key: self.out_dir_default}]
-        config = pdfebc_core.utils.create_config(sections, section_contents)
+        config = pdfebc_core.config_utils.create_config(sections, section_contents)
         for section, section_content in zip(sections, section_contents):
             config_section = config[section]
             for section_content_key, section_content_value in section_content.items():
@@ -95,27 +96,27 @@ class UtilsTest(unittest.TestCase):
         sections = ["EMAIL"]
         section_contents = [{1: 2, 3: 4}, {1: 2}]
         with self.assertRaises(ValueError):
-            pdfebc_core.utils.create_config(sections, section_contents)
+            pdfebc_core.config_utils.create_config(sections, section_contents)
 
     def test_write_valid_email_config(self):
         self.temp_config_file.close()
-        pdfebc_core.utils.write_config(self.valid_config, self.temp_config_file.name)
+        pdfebc_core.config_utils.write_config(self.valid_config, self.temp_config_file.name)
         config = configparser.ConfigParser()
         with open(self.temp_config_file.name) as file:
             config.read_file(file)
-        section = config[pdfebc_core.utils.EMAIL_SECTION_KEY]
+        section = config[pdfebc_core.config_utils.EMAIL_SECTION_KEY]
         self.assertEqual(self.user, section[self.user_key])
         self.assertEqual(self.password, section[self.password_key])
         self.assertEqual(self.receiver, section[self.receiver_key])
 
     @patch('os.makedirs', return_value=None)
-    @patch('pdfebc_core.utils.open')
+    @patch('pdfebc_core.config_utils.open')
     def test_write_email_config_missing_dir(self, mock_open, mock_makedirs):
         with tempfile.TemporaryDirectory() as tmpdir:
             config_path = tempfile.NamedTemporaryFile(dir=tmpdir).name
         mock_open.return_value.__enter__.return_value.name = 'badonkadonk'
         mock_config = Mock()
-        pdfebc_core.utils.write_config(mock_config, config_path)
+        pdfebc_core.config_utils.write_config(mock_config, config_path)
         mock_makedirs.assert_called_once_with(os.path.dirname(config_path))
         mock_open.assert_called_once_with(config_path, 'w', encoding='utf-8')
 
@@ -126,8 +127,8 @@ class UtilsTest(unittest.TestCase):
         self.valid_config.write(self.temp_config_file)
         self.temp_config_file.flush()
         self.temp_config_file.close()
-        email_section = pdfebc_core.utils.read_config(self.temp_config_file.name)[
-            pdfebc_core.utils.EMAIL_SECTION_KEY]
+        email_section = pdfebc_core.config_utils.read_config(self.temp_config_file.name)[
+            pdfebc_core.config_utils.EMAIL_SECTION_KEY]
         actual_user = email_section[self.user_key]
         actual_password = email_section[self.password_key]
         actual_receiver = email_section[self.receiver_key]
@@ -143,7 +144,7 @@ class UtilsTest(unittest.TestCase):
         with tempfile.NamedTemporaryFile() as tmp:
             config_path = tmp.name
         with self.assertRaises(IOError) as context:
-            pdfebc_core.utils.read_config(config_path)
+            pdfebc_core.config_utils.read_config(config_path)
 
     def test_attach_valid_files(self):
         email_ = MIMEMultipart()
@@ -185,7 +186,7 @@ class UtilsTest(unittest.TestCase):
         mock_smtp_instance.quit.assert_called_once()
 
     def test_create_email_config(self):
-        section_key = pdfebc_core.utils.EMAIL_SECTION_KEY
+        section_key = pdfebc_core.config_utils.EMAIL_SECTION_KEY
         user_key = self.user_key
         password_key = self.password_key
         receiver_key = self.receiver_key
@@ -199,26 +200,26 @@ class UtilsTest(unittest.TestCase):
     def test_valid_config_exists_no_config(self):
         with tempfile.NamedTemporaryFile() as file:
             config_path = file.name
-        self.assertFalse(pdfebc_core.utils.valid_config_exists(config_path))
+        self.assertFalse(pdfebc_core.config_utils.valid_config_exists(config_path))
 
     def test_valid_config_exists_with_valid_config(self):
         self.valid_config.write(self.temp_config_file)
         self.temp_config_file.close()
         config_path = self.temp_config_file.name
-        self.assertTrue(pdfebc_core.utils.valid_config_exists(config_path))
+        self.assertTrue(pdfebc_core.config_utils.valid_config_exists(config_path))
 
     def test_valid_config_exists_with_invalid_config(self):
         self.invalid_config.write(self.temp_config_file)
         self.temp_config_file.close()
         config_path = self.temp_config_file.name
-        self.assertFalse(pdfebc_core.utils.valid_config_exists(config_path))
+        self.assertFalse(pdfebc_core.config_utils.valid_config_exists(config_path))
 
     def test_valid_config_exists_with_only_sections(self):
         sections_string = "[{}]\n[{}]".format(self.email_section_key,
                                           self.default_section_key)
         self.temp_config_file.write(sections_string)
         self.temp_config_file.close()
-        self.assertFalse(pdfebc_core.utils.valid_config_exists(self.temp_config_file.name))
+        self.assertFalse(pdfebc_core.config_utils.valid_config_exists(self.temp_config_file.name))
 
     def test_if_callable_call_with_formatted_string_too_few_args(self):
         three_args_formattable_string = "test {} test {} test {}"
@@ -285,7 +286,7 @@ class UtilsTest(unittest.TestCase):
     def test_run_config_diagnostics_valid_config(self):
         self.valid_config.write(self.temp_config_file)
         self.temp_config_file.close()
-        config_path, missing_sections, malformed_entries = pdfebc_core.utils.run_config_diagnostics(
+        config_path, missing_sections, malformed_entries = pdfebc_core.config_utils.run_config_diagnostics(
             self.temp_config_file.name)
         self.assertEqual(self.temp_config_file.name, config_path)
         self.assertFalse(missing_sections)
@@ -294,7 +295,7 @@ class UtilsTest(unittest.TestCase):
     def test_run_config_diagnostics_empty_config(self):
         config = configparser.ConfigParser()
         config.write(self.temp_config_file)
-        config_path, missing_sections, malformed_entries = pdfebc_core.utils.run_config_diagnostics(
+        config_path, missing_sections, malformed_entries = pdfebc_core.config_utils.run_config_diagnostics(
             self.temp_config_file.name)
         self.assertEqual(self.temp_config_file.name, config_path)
         self.assertEqual(self.section_keys.keys(), missing_sections)
@@ -305,7 +306,7 @@ class UtilsTest(unittest.TestCase):
         for section in self.section_keys.keys():
             config[section] = {}
         config.write(self.temp_config_file)
-        config_path, missing_sections, malformed_entries = pdfebc_core.utils.run_config_diagnostics(
+        config_path, missing_sections, malformed_entries = pdfebc_core.config_utils.run_config_diagnostics(
             self.temp_config_file.name)
         self.assertEqual(self.temp_config_file.name, config_path)
         self.assertEqual(self.section_keys.keys(), missing_sections)
@@ -314,7 +315,7 @@ class UtilsTest(unittest.TestCase):
     def test_run_config_diagnostics_missing_section_and_options(self):
         self.invalid_config.write(self.temp_config_file)
         self.temp_config_file.close()
-        config_path, missing_sections, malformed_entries = pdfebc_core.utils.run_config_diagnostics(
+        config_path, missing_sections, malformed_entries = pdfebc_core.config_utils.run_config_diagnostics(
             self.temp_config_file.name)
         self.assertEqual(self.temp_config_file.name, config_path)
         expected_missing_email_options = self.email_section_keys - {self.user_key, self.password_key}
@@ -326,28 +327,28 @@ class UtilsTest(unittest.TestCase):
         section_string = "[{}]"
         option_string = "{} = {}"
         config = {self.default_section_key: {self.gs_binary_default_key: gs_binary_default},
-                 self.email_section_key: {self.user_key: self.user, self.password_key: self.password}}
+                  self.email_section_key: {self.user_key: self.user, self.password_key: self.password}}
         expected_output = "\n".join([section_string.format(self.default_section_key),
                            option_string.format(self.gs_binary_default_key, gs_binary_default),
                            section_string.format(self.email_section_key),
                            option_string.format(self.user_key, self.user),
                            option_string.format(self.password_key, self.password)])
         print(expected_output)
-        actual_output = pdfebc_core.utils.config_to_string(config)
+        actual_output = pdfebc_core.config_utils.config_to_string(config)
         self.assertEqual(expected_output, actual_output)
 
     def test_try_get_conf_from_missing_section(self):
         config_dict = {self.email_section_key: {self.user_key: self.user}}
         non_existing_section = "This section does not exist"
         equally_non_existing_attribute = "This attribute doesn't exist either"
-        with self.assertRaises(pdfebc_core.utils.ConfigurationError) as context:
-            pdfebc_core.utils.try_get_conf(config_dict, non_existing_section,
+        with self.assertRaises(pdfebc_core.config_utils.ConfigurationError) as context:
+            pdfebc_core.config_utils.try_get_conf(config_dict, non_existing_section,
                                            equally_non_existing_attribute)
 
     def test_try_get_conf_from_section_with_missing_attribute(self):
         config_dict = {self.email_section_key: {self.user_key: self.user}}
         non_existing_section = "Badonkadonk. This doesn't exist"
-        with self.assertRaises(pdfebc_core.utils.ConfigurationError) as context:
-            pdfebc_core.utils.try_get_conf(config_dict, self.email_section_key,
+        with self.assertRaises(pdfebc_core.config_utils.ConfigurationError) as context:
+            pdfebc_core.config_utils.try_get_conf(config_dict, self.email_section_key,
                                            non_existing_section)
 
