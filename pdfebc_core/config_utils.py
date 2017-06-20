@@ -1,9 +1,10 @@
+
 # -*- coding: utf-8 -*-
-"""Module containing util functions for the pdfebc program.
+"""Module containing util functions relating to the configuration of pdfebc.
 
 The SMTP server and port are configured in the config.cnf file.
 
-Requires a config file called 'email.cnf' in the user conf directory specified by appdirs. In the
+Requires a config file called 'config.cnf' in the user conf directory specified by appdirs. In the
 case of Arch Linux, this is '$HOME/.config/pdfebc/config.cnf', but this may vary with distributions.
 The config file should have the following format:
 
@@ -19,18 +20,14 @@ The config file should have the following format:
 | src = <source_dir>
 | out = <out_dir>
 
-.. module:: utils
+.. module:: config_utils
     :platform: Unix
-    :synopsis: Core functions for pdfebc.
+    :synopsis: Configuration utility functions.
 
 .. moduleauthor:: Simon Larsén <slarse@kth.se>
 """
-import smtplib
 import os
 import configparser
-from email.mime.text import MIMEText
-from email.mime.application import MIMEApplication
-from email.mime.multipart import MIMEMultipart
 from collections import defaultdict
 import appdirs
 
@@ -53,17 +50,8 @@ DEFAULT_SECTION_KEYS = {GS_DEFAULT_BINARY_KEY, SRC_DEFAULT_DIR_KEY, OUT_DEFAULT_
 SECTION_KEYS = {EMAIL_SECTION_KEY: EMAIL_SECTION_KEYS,
                 DEFAULT_SECTION_KEY: DEFAULT_SECTION_KEYS}
 
-SENDING_PRECONF = """Sending files ...
-From: {}
-To: {}
-SMTP Server: {}
-SMTP Port: {}
-
-Files:
-{}"""
-FILES_SENT = "Files successfully sent!"""
-
 class ConfigurationError(configparser.ParsingError):
+    """Error thrown whenever something is wrong with the configuration file."""
     pass
 
 def create_config(sections, section_contents):
@@ -166,8 +154,9 @@ def run_config_diagnostics(config_path=CONFIG_PATH):
     Args:
         config_path (str): Path to the configuration file.
     Returns:
-        str, Set[str], dict(str, Set[str]): The path to the configuration file, a set of missing sections
-        and a dict that maps each section to the entries that have either missing or empty options.
+        str, Set[str], dict(str, Set[str]): The path to the configuration file, a set of missing
+        sections and a dict that maps each section to the entries that have either missing or empty
+        options.
     """
     config = read_config(config_path)
     missing_sections = set()
@@ -204,73 +193,6 @@ def try_get_conf(config, section, attribute):
                              "Failed to get attribute '{}' from section '{}'!"
                              .format(attribute, section))
 
-def send_with_attachments(subject, message, filepaths, config):
-    """Send an email from the user (a gmail) to the receiver.
-
-    Args:
-        subject (str): Subject of the email.
-        message (str): A message.
-        filepaths (list(str)): Filepaths to files to be attached.
-        config (defaultdict): A defaultdict.
-    """
-    email_ = MIMEMultipart()
-    email_.attach(MIMEText(message))
-    email_["Subject"] = subject
-    email_["From"] = try_get_conf(config, EMAIL_SECTION_KEY, USER_KEY)
-    email_["To"] = try_get_conf(config, EMAIL_SECTION_KEY, RECEIVER_KEY)
-    attach_files(filepaths, email_)
-    send_email(email_, config)
-
-
-def attach_files(filepaths, email_):
-    """Take a list of filepaths and attach the files to a MIMEMultipart.
-
-    Args:
-        filepaths (list(str)): A list of filepaths.
-        email_ (email.MIMEMultipart): A MIMEMultipart email_.
-    """
-    for filepath in filepaths:
-        base = os.path.basename(filepath)
-        with open(filepath, "rb") as file:
-            part = MIMEApplication(file.read(), Name=base)
-            part["Content-Disposition"] = 'attachment; filename="%s"' % base
-            email_.attach(part)
-
-def send_email(email_, config):
-    """Send an email.
-
-    Args:
-        email_ (email.MIMEMultipart): The email to send.
-        config (defaultdict): A defaultdict.
-    """
-    smtp_server = try_get_conf(config, EMAIL_SECTION_KEY, SMTP_SERVER_KEY)
-    smtp_port = int(try_get_conf(config, EMAIL_SECTION_KEY, SMTP_PORT_KEY))
-    user = try_get_conf(config, EMAIL_SECTION_KEY, USER_KEY)
-    password = try_get_conf(config, EMAIL_SECTION_KEY, PASSWORD_KEY)
-    server = smtplib.SMTP(smtp_server, smtp_port)
-    server.starttls()
-    server.login(user, password)
-    server.send_message(email_)
-    server.quit()
-
-def send_files_preconf(filepaths, config_path=CONFIG_PATH, status_callback=None):
-    """Send files using the config.ini settings.
-
-    Args:
-        filepaths (list(str)): A list of filepaths.
-    """
-    config = read_config(config_path)
-    subject = "PDF files from pdfebc"
-    message = ""
-    args = (try_get_conf(config, EMAIL_SECTION_KEY, USER_KEY),
-            try_get_conf(config, EMAIL_SECTION_KEY, RECEIVER_KEY),
-            try_get_conf(config, EMAIL_SECTION_KEY, SMTP_SERVER_KEY),
-            try_get_conf(config, EMAIL_SECTION_KEY, SMTP_PORT_KEY),
-            '\n'.join(filepaths))
-    if_callable_call_with_formatted_string(status_callback, SENDING_PRECONF, *args)
-    send_with_attachments(subject, message, filepaths, config)
-    if_callable_call_with_formatted_string(status_callback, FILES_SENT)
-
 def valid_config_exists(config_path=CONFIG_PATH):
     """Verify that a valid config file exists.
 
@@ -280,35 +202,15 @@ def valid_config_exists(config_path=CONFIG_PATH):
     Returns:
         boolean: True if there is a valid config file, false if not.
     """
-    if (os.path.isfile(config_path)):
+    if os.path.isfile(config_path):
         try:
             config = read_config(config_path)
             check_config(config)
-        except ConfigurationError or IOError:
+        except (ConfigurationError, IOError):
             return False
     else:
         return False
     return True
-
-def if_callable_call_with_formatted_string(callback, formattable_string, *args):
-    """If the callback is callable, format the string with the args and make a call.
-    Otherwise, do nothing.
-
-    Args:
-        callback (function): May or may not be callable.
-        formattable_string (str): A string with '{}'s inserted.
-        *args: A variable amount of arguments for the string formatting. Must correspond to the
-        amount of '{}'s in 'formattable_string'.
-    Raises:
-        ValueError
-    """
-    try:
-        formatted_string = formattable_string.format(*args)
-    except IndexError:
-        raise ValueError("Mismatch metween amount of insertion points in the formattable string\n"
-                         "and the amount of args given.")
-    if callable(callback):
-        callback(formatted_string)
 
 def config_to_string(config):
     """Nice output string for the config, which is a nested defaultdict.
