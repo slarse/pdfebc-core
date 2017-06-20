@@ -56,7 +56,7 @@ met:
       but this can be specified via the CLI.
 * A Gmail account (for sending e-mails)
     - By default, ``pdfebc`` uses Google's SMTP server to send e-mails. The program can however
-      be configured to use any STMP server by maniupulating the ``config.cnf`` file (please see
+      be configured to use any SMTP server by maniupulating the ``config.cnf`` file (please see
       this `sample configuration`_ for formatting). Currently, the server must support TLS.
 
 Install

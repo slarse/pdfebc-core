@@ -12,7 +12,7 @@ required = ['appdirs>=1.4.3']
 
 setup(
     name='pdfebc-core',
-    version='0.1.0',
+    version='0.2.0',
     description=('Core functions of the pdfebc tools. The pdfebc tools is (going to be) a .'
                  'set of tools for compressing PDF files to e-reader friendly sizes.'),
     long_description=readme,
