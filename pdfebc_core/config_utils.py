@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 """Module containing util functions relating to the configuration of pdfebc.
 
@@ -104,32 +103,8 @@ def read_config(config_path=CONFIG_PATH):
         raise IOError("No config file found at %s" % config_path)
     config_parser = configparser.ConfigParser()
     config_parser.read(config_path)
-    config = config_parser_to_defaultdict(config_parser)
+    config = _config_parser_to_defaultdict(config_parser)
     return config
-
-def config_parser_to_defaultdict(config_parser):
-    """Convert a ConfigParser to a defaultdict.
-
-    Args:
-        config_parser (ConfigParser): A ConfigParser.
-    """
-    config = defaultdict(defaultdict)
-    for section, section_content in config_parser.items():
-        if section != 'DEFAULT':
-            for option, option_value in section_content.items():
-                config[section][option] = option_value
-    return config
-
-def section_is_healthy(section, expected_keys):
-    """Check that the section contains all keys it should.
-
-    Args:
-        section (defaultdict): A defaultdict.
-        expected_keys (Iterable): A Set of keys that should be contained in the section.
-    Returns:
-        boolean: True if the section is healthy, false if not.
-    """
-    return set(section.keys()) == set(expected_keys)
 
 def check_config(config):
     """Check that all sections of the config contain the keys that they should.
@@ -144,7 +119,7 @@ def check_config(config):
         if not section_content:
             raise ConfigurationError("Config file badly formed! Section {} is missing."
                                      .format(section))
-        elif not section_is_healthy(section_content, expected_section_keys):
+        elif not _section_is_healthy(section_content, expected_section_keys):
             raise ConfigurationError("The {} section of the configuration file is badly formed!"
                                      .format(section))
 
@@ -172,7 +147,7 @@ def run_config_diagnostics(config_path=CONFIG_PATH):
                     malformed_entries[section].add(option)
     return config_path, missing_sections, malformed_entries
 
-def try_get_conf(config, section, attribute):
+def get_attribute_from_config(config, section, attribute):
     """Try to parse an attribute of the config file.
 
     Args:
@@ -226,3 +201,27 @@ def config_to_string(config):
         for option, option_value in section_content.items():
             output.append("{} = {}".format(option, option_value))
     return "\n".join(output)
+
+def _config_parser_to_defaultdict(config_parser):
+    """Convert a ConfigParser to a defaultdict.
+
+    Args:
+        config_parser (ConfigParser): A ConfigParser.
+    """
+    config = defaultdict(defaultdict)
+    for section, section_content in config_parser.items():
+        if section != 'DEFAULT':
+            for option, option_value in section_content.items():
+                config[section][option] = option_value
+    return config
+
+def _section_is_healthy(section, expected_keys):
+    """Check that the section contains all keys it should.
+
+    Args:
+        section (defaultdict): A defaultdict.
+        expected_keys (Iterable): A Set of keys that should be contained in the section.
+    Returns:
+        boolean: True if the section is healthy, false if not.
+    """
+    return set(section.keys()) == set(expected_keys)

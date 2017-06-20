@@ -16,7 +16,7 @@ from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from .config_utils import (EMAIL_SECTION_KEY, USER_KEY, RECEIVER_KEY, PASSWORD_KEY, SMTP_PORT_KEY,
-                           SMTP_SERVER_KEY, try_get_conf, read_config, CONFIG_PATH,
+                           SMTP_SERVER_KEY, get_attribute_from_config, read_config, CONFIG_PATH,
                            ConfigurationError, check_config)
 from .misc_utils import if_callable_call_with_formatted_string
 
@@ -43,13 +43,13 @@ def send_with_attachments(subject, message, filepaths, config):
     email_ = MIMEMultipart()
     email_.attach(MIMEText(message))
     email_["Subject"] = subject
-    email_["From"] = try_get_conf(config, EMAIL_SECTION_KEY, USER_KEY)
-    email_["To"] = try_get_conf(config, EMAIL_SECTION_KEY, RECEIVER_KEY)
-    attach_files(filepaths, email_)
-    send_email(email_, config)
+    email_["From"] = get_attribute_from_config(config, EMAIL_SECTION_KEY, USER_KEY)
+    email_["To"] = get_attribute_from_config(config, EMAIL_SECTION_KEY, RECEIVER_KEY)
+    _attach_files(filepaths, email_)
+    _send_email(email_, config)
 
 
-def attach_files(filepaths, email_):
+def _attach_files(filepaths, email_):
     """Take a list of filepaths and attach the files to a MIMEMultipart.
 
     Args:
@@ -63,17 +63,17 @@ def attach_files(filepaths, email_):
             part["Content-Disposition"] = 'attachment; filename="%s"' % base
             email_.attach(part)
 
-def send_email(email_, config):
+def _send_email(email_, config):
     """Send an email.
 
     Args:
         email_ (email.MIMEMultipart): The email to send.
         config (defaultdict): A defaultdict.
     """
-    smtp_server = try_get_conf(config, EMAIL_SECTION_KEY, SMTP_SERVER_KEY)
-    smtp_port = int(try_get_conf(config, EMAIL_SECTION_KEY, SMTP_PORT_KEY))
-    user = try_get_conf(config, EMAIL_SECTION_KEY, USER_KEY)
-    password = try_get_conf(config, EMAIL_SECTION_KEY, PASSWORD_KEY)
+    smtp_server = get_attribute_from_config(config, EMAIL_SECTION_KEY, SMTP_SERVER_KEY)
+    smtp_port = int(get_attribute_from_config(config, EMAIL_SECTION_KEY, SMTP_PORT_KEY))
+    user = get_attribute_from_config(config, EMAIL_SECTION_KEY, USER_KEY)
+    password = get_attribute_from_config(config, EMAIL_SECTION_KEY, PASSWORD_KEY)
     server = smtplib.SMTP(smtp_server, smtp_port)
     server.starttls()
     server.login(user, password)
@@ -89,10 +89,10 @@ def send_files_preconf(filepaths, config_path=CONFIG_PATH, status_callback=None)
     config = read_config(config_path)
     subject = "PDF files from pdfebc"
     message = ""
-    args = (try_get_conf(config, EMAIL_SECTION_KEY, USER_KEY),
-            try_get_conf(config, EMAIL_SECTION_KEY, RECEIVER_KEY),
-            try_get_conf(config, EMAIL_SECTION_KEY, SMTP_SERVER_KEY),
-            try_get_conf(config, EMAIL_SECTION_KEY, SMTP_PORT_KEY),
+    args = (get_attribute_from_config(config, EMAIL_SECTION_KEY, USER_KEY),
+            get_attribute_from_config(config, EMAIL_SECTION_KEY, RECEIVER_KEY),
+            get_attribute_from_config(config, EMAIL_SECTION_KEY, SMTP_SERVER_KEY),
+            get_attribute_from_config(config, EMAIL_SECTION_KEY, SMTP_PORT_KEY),
             '\n'.join(filepaths))
     if_callable_call_with_formatted_string(status_callback, SENDING_PRECONF, *args)
     send_with_attachments(subject, message, filepaths, config)

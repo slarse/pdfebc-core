@@ -168,17 +168,17 @@ class ConfigUtilsTest(UtilsTestABC):
         actual_output = pdfebc_core.config_utils.config_to_string(config)
         self.assertEqual(expected_output, actual_output)
 
-    def test_try_get_conf_from_missing_section(self):
+    def test_get_attribute_from_config_from_missing_section(self):
         config_dict = {self.email_section_key: {self.user_key: self.user}}
         non_existing_section = "This section does not exist"
         equally_non_existing_attribute = "This attribute doesn't exist either"
         with self.assertRaises(pdfebc_core.config_utils.ConfigurationError):
-            pdfebc_core.config_utils.try_get_conf(config_dict, non_existing_section,
+            pdfebc_core.config_utils.get_attribute_from_config(config_dict, non_existing_section,
                                                   equally_non_existing_attribute)
 
-    def test_try_get_conf_from_section_with_missing_attribute(self):
+    def test_get_attribute_from_config_from_section_with_missing_attribute(self):
         config_dict = {self.email_section_key: {self.user_key: self.user}}
         non_existing_section = "Badonkadonk. This doesn't exist"
         with self.assertRaises(pdfebc_core.config_utils.ConfigurationError):
-            pdfebc_core.config_utils.try_get_conf(config_dict, self.email_section_key,
+            pdfebc_core.config_utils.get_attribute_from_config(config_dict, self.email_section_key,
                                                   non_existing_section)

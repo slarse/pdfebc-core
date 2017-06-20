@@ -30,7 +30,7 @@ lower limit for compression is {} bytes"""
 GS_NOT_INSTALLED = """Ghostscript not installed or not aliased to '{}'.
 Exiting ..."""
 
-def get_pdf_filenames_at(source_directory):
+def _get_pdf_filenames_at(source_directory):
     """Find all PDF files in the specified directory.
 
     Args:
@@ -95,7 +95,7 @@ def compress_multiple_pdfs(source_directory, output_directory, ghostscript_binar
     Returns:
         list(str): paths to outputs.
     """
-    source_paths = get_pdf_filenames_at(source_directory)
+    source_paths = _get_pdf_filenames_at(source_directory)
     out_paths = list()
     if_callable_call_with_formatted_string(status_callback, COMPRESSING_MULTIPLE,
                                            source_directory, output_directory, len(source_paths))

@@ -13,7 +13,7 @@ from .context import pdfebc_core
 class EmailUtilsTest(UtilsTestABC):
     def test_attach_valid_files(self):
         email_ = MIMEMultipart()
-        pdfebc_core.email_utils.attach_files(self.attachment_filenames, email_)
+        pdfebc_core.email_utils._attach_files(self.attachment_filenames, email_)
         expected_filenames = list(self.attachment_filenames)
         part_dispositions = [part.get('Content-Disposition')
                              for part in email.message_from_bytes(email_.as_bytes()).walk()
@@ -29,7 +29,7 @@ class EmailUtilsTest(UtilsTestABC):
         email_['From'] = self.user
         email_['To'] = self.receiver
         email_['Subject'] = subject
-        pdfebc_core.email_utils.send_email(email_, self.valid_config._sections)
+        pdfebc_core.email_utils._send_email(email_, self.valid_config._sections)
         mock_smtp.assert_called_once_with(self.smtp_server, self.smtp_port)
         mock_smtp_instance = mock_smtp()
         mock_smtp_instance.starttls.assert_called_once()

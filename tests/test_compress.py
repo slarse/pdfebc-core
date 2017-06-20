@@ -48,19 +48,19 @@ class CoreTest(unittest.TestCase):
 
     def test_get_pdf_filenames_from_empty_dir(self):
         with tempfile.TemporaryDirectory() as tmpdir:
-            filepaths = pdfebc_core.compress.get_pdf_filenames_at(tmpdir)
+            filepaths = pdfebc_core.compress._get_pdf_filenames_at(tmpdir)
             self.assertFalse(filepaths)
 
     def test_get_pdf_filenames_from_dir_with_only_pdfs(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             files = create_temporary_files_with_suffixes(tmpdir)
-            filepaths = pdfebc_core.compress.get_pdf_filenames_at(tmpdir)
+            filepaths = pdfebc_core.compress._get_pdf_filenames_at(tmpdir)
             self.assert_filepaths_match_file_names(filepaths, files)
 
     def test_get_pdf_filenames_from_dir_with_only_other_extensions(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             files = create_temporary_files_with_suffixes(tmpdir, suffixes=OTHER_FILE_EXTENSIONS)
-            filepaths = pdfebc_core.compress.get_pdf_filenames_at(tmpdir)
+            filepaths = pdfebc_core.compress._get_pdf_filenames_at(tmpdir)
             self.assertFalse(filepaths)
 
     def test_get_pdf_filenames_from_dir_that_does_not_exist(self):
@@ -68,14 +68,14 @@ class CoreTest(unittest.TestCase):
             # TemporaryDirectory is deleted upon exiting with-context
             path_to_dir = tmpdir
         with self.assertRaises(ValueError) as context:
-            pdfebc_core.compress.get_pdf_filenames_at(path_to_dir)
+            pdfebc_core.compress._get_pdf_filenames_at(path_to_dir)
 
     def test_get_pdf_filenames_from_dir_with_mixed_file_extensions(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             amount_of_pdfs = 10
             pdf_files = create_temporary_files_with_suffixes(tmpdir, files_per_suffix=amount_of_pdfs)
             non_pdf_files = create_temporary_files_with_suffixes(tmpdir, suffixes=OTHER_FILE_EXTENSIONS)
-            filepaths = pdfebc_core.compress.get_pdf_filenames_at(tmpdir)
+            filepaths = pdfebc_core.compress._get_pdf_filenames_at(tmpdir)
             self.assert_filepaths_match_file_names(filepaths, pdf_files)
 
     def test_compress_non_pdf_file(self):
