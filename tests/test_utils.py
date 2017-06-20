@@ -226,7 +226,7 @@ class UtilsTest(unittest.TestCase):
         mock_callback = Mock(return_value=None)
         args = ("test", "test")
         with self.assertRaises(ValueError) as context:
-            pdfebc_core.utils.if_callable_call_with_formatted_string(
+            pdfebc_core.misc_utils.if_callable_call_with_formatted_string(
                 mock_callback,
                 three_args_formattable_string,
                 *args)
@@ -235,30 +235,30 @@ class UtilsTest(unittest.TestCase):
         three_args_formattable_string = "test {} test {} test {}"
         args = ("test", "test", "test")
         mock_callback = Mock(return_vale=None)
-        pdfebc_core.utils.if_callable_call_with_formatted_string(
-                mock_callback,
-                three_args_formattable_string,
-                *args)
+        pdfebc_core.misc_utils.if_callable_call_with_formatted_string(
+            mock_callback,
+            three_args_formattable_string,
+            *args)
         mock_callback.assert_called_once_with(
             three_args_formattable_string.format(*args))
 
-    @patch('pdfebc_core.utils.callable', return_value=False)
+    @patch('pdfebc_core.misc_utils.callable', return_value=False)
     def test_if_callable_call_with_formatted_string_not_callable_too_few_args(self, mock_callable):
         three_args_formattable_string = "test {} test {} test {}"
         args = ("test", "test")
         mock_callback = Mock(return_value=None)
         with self.assertRaises(ValueError) as context:
-            pdfebc_core.utils.if_callable_call_with_formatted_string(
+            pdfebc_core.misc_utils.if_callable_call_with_formatted_string(
                 mock_callback,
                 three_args_formattable_string,
                 *args)
 
-    @patch('pdfebc_core.utils.callable', return_value=False)
+    @patch('pdfebc_core.misc_utils.callable', return_value=False)
     def test_if_callable_call_with_formatted_string_not_callable_valid_args(self, mock_callable):
         three_args_formattable_string = "test {} test {} test {}"
         args = ("test", "test", "test")
         mock_callback = Mock(return_value=None)
-        pdfebc_core.utils.if_callable_call_with_formatted_string(
+        pdfebc_core.misc_utils.if_callable_call_with_formatted_string(
             mock_callback,
             three_args_formattable_string,
             *args)

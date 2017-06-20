@@ -1,27 +1,12 @@
 # -*- coding: utf-8 -*-
-"""Module containing util functions for the pdfebc program.
+"""Module containing email util functions for the pdfebc program.
 
-The SMTP server and port are configured in the config.cnf file.
-
-Requires a config file called 'email.cnf' in the user conf directory specified by appdirs. In the
-case of Arch Linux, this is '$HOME/.config/pdfebc/config.cnf', but this may vary with distributions.
-The config file should have the following format:
-
-| [EMAIL]
-| user = <sender_email>
-| pass = <password>
-| receiver = <receiver_email>
-| smtp_server = <smtp_server>
-| smtp_port = <smtp_port>
-| 
-| [DEFAULTS]
-| gs_binary = <ghostscript_binary>
-| src = <source_dir>
-| out = <out_dir>
+The SMTP server and port are configured in the config.cnf file, see the config_utils module
+for more information.
 
 .. module:: utils
     :platform: Unix
-    :synopsis: Core functions for pdfebc.
+    :synopsis: Email utility functions for pdfebc.
 
 .. moduleauthor:: Simon Larsén <slarse@kth.se>
 """
@@ -33,6 +18,7 @@ from email.mime.multipart import MIMEMultipart
 from .config_utils import (EMAIL_SECTION_KEY, USER_KEY, RECEIVER_KEY, PASSWORD_KEY, SMTP_PORT_KEY,
                            SMTP_SERVER_KEY, try_get_conf, read_config, CONFIG_PATH,
                            ConfigurationError, check_config)
+from .misc_utils import if_callable_call_with_formatted_string
 
 
 SENDING_PRECONF = """Sending files ...
@@ -111,23 +97,3 @@ def send_files_preconf(filepaths, config_path=CONFIG_PATH, status_callback=None)
     if_callable_call_with_formatted_string(status_callback, SENDING_PRECONF, *args)
     send_with_attachments(subject, message, filepaths, config)
     if_callable_call_with_formatted_string(status_callback, FILES_SENT)
-
-def if_callable_call_with_formatted_string(callback, formattable_string, *args):
-    """If the callback is callable, format the string with the args and make a call.
-    Otherwise, do nothing.
-
-    Args:
-        callback (function): May or may not be callable.
-        formattable_string (str): A string with '{}'s inserted.
-        *args: A variable amount of arguments for the string formatting. Must correspond to the
-        amount of '{}'s in 'formattable_string'.
-    Raises:
-        ValueError
-    """
-    try:
-        formatted_string = formattable_string.format(*args)
-    except IndexError:
-        raise ValueError("Mismatch metween amount of insertion points in the formattable string\n"
-                         "and the amount of args given.")
-    if callable(callback):
-        callback(formatted_string)
