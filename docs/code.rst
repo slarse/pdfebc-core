@@ -9,8 +9,20 @@ compress
 .. automodule:: pdfebc_core.compress
     :members:
 
-utils
+config_utils
 ===================
 
-.. automodule:: pdfebc_core.utils
+.. automodule:: pdfebc_core.config_utils
+    :members:
+
+email_utils
+===================
+
+.. automodule:: pdfebc_core.email_utils
+    :members:
+
+misc_utils
+===================
+
+.. automodule:: pdfebc_core.misc_utils
     :members:
