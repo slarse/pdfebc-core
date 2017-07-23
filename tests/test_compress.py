@@ -94,23 +94,24 @@ class CoreTest(unittest.TestCase):
         with self.assertRaises(ValueError) as context:
             next(pdfebc_core.compress.compress_pdf(filename, self.default_trash_file, self.gs_binary))
 
-    def test_compress_too_small_pdf(self):
+    @patch('pdfebc_core.compress.LOGGER')
+    def test_compress_too_small_pdf(self, mock_logger):
         with tempfile.TemporaryDirectory(dir=self.trash_can.name) as tmpoutdir:
             pdf_file = create_temporary_files_with_suffixes(self.trash_can.name,
                                                             files_per_suffix=1)[0]
             pdf_file.close()
             output_path = os.path.join(tmpoutdir, os.path.basename(pdf_file.name))
-            compress_gen = pdfebc_core.compress.compress_pdf(pdf_file.name, output_path,
-                                              self.gs_binary)
+            pdfebc_core.compress.compress_pdf(pdf_file.name, output_path, self.gs_binary)
             expected_not_compressing_message = pdfebc_core.compress.NOT_COMPRESSING.format(
                 pdf_file.name, 0,
                 pdfebc_core.compress.FILE_SIZE_LOWER_LIMIT)
             expected_done_message = pdfebc_core.compress.FILE_DONE.format(output_path)
-            self.assertEqual(expected_not_compressing_message, next(compress_gen))
-            self.assertEqual(expected_done_message, next(compress_gen))
+            mock_logger.info.assert_any_call(expected_not_compressing_message)
+            mock_logger.info.assert_any_call(expected_done_message)
 
+    @patch('pdfebc_core.compress.LOGGER')
     @patch('subprocess.Popen', autospec=True)
-    def test_compress_adequately_sized_pdf(self, mock_popen):
+    def test_compress_adequately_sized_pdf(self, mock_popen, mock_logger):
         # change the lower limit for file size, is reset in the setUp method
         pdfebc_core.compress.FILE_SIZE_LOWER_LIMIT = 0
         with tempfile.TemporaryDirectory(dir=self.trash_can.name) as tmpoutdir:
@@ -118,11 +119,11 @@ class CoreTest(unittest.TestCase):
                                                             files_per_suffix=1)[0]
             pdf_file.close()
             output_path = os.path.join(tmpoutdir, os.path.basename(pdf_file.name))
-            compress_gen = pdfebc_core.compress.compress_pdf(pdf_file.name, output_path, self.gs_binary)
+            pdfebc_core.compress.compress_pdf(pdf_file.name, output_path, self.gs_binary)
             expected_compressing_message = pdfebc_core.compress.COMPRESSING.format(pdf_file.name)
             expected_done_message = pdfebc_core.compress.FILE_DONE.format(output_path)
-            self.assertEqual(expected_compressing_message, next(compress_gen))
-            self.assertEqual(expected_done_message, next(compress_gen))
+            mock_logger.info.assert_any_call(expected_compressing_message)
+            mock_logger.info.assert_any_call(expected_done_message)
             mock_popen.assert_called_once()
             mock_popen_instance = mock_popen([])
             mock_popen_instance.communicate.assert_called_once()

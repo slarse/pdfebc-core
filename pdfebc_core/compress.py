@@ -11,6 +11,7 @@ compress PDF files.
 import os
 import sys
 import subprocess
+import daiquiri
 from .misc_utils import if_callable_call_with_formatted_string
 
 BYTES_PER_MEGABYTE = 1024**2
@@ -29,6 +30,8 @@ Reason: Actual file size is {} bytes,
 lower limit for compression is {} bytes"""
 GS_NOT_INSTALLED = """Ghostscript not installed or not aliased to '{}'.
 Exiting ..."""
+
+LOGGER = daiquiri.getLogger(__name__)
 
 def _get_pdf_filenames_at(source_directory):
     """Find all PDF files in the specified directory.
@@ -49,8 +52,7 @@ def _get_pdf_filenames_at(source_directory):
             if filename.endswith(PDF_EXTENSION)]
 
 def compress_pdf(filepath, output_path, ghostscript_binary):
-    """Compress a single PDF file. This is a generator function that
-    yields two status messages (unless exceptions are raised).
+    """Compress a single PDF file.
 
     Args:
         filepath (str): Path to the PDF file.
@@ -66,10 +68,10 @@ def compress_pdf(filepath, output_path, ghostscript_binary):
     try:
         file_size = os.stat(filepath).st_size
         if file_size < FILE_SIZE_LOWER_LIMIT:
-            yield NOT_COMPRESSING.format(filepath, file_size, FILE_SIZE_LOWER_LIMIT)
+            LOGGER.info(NOT_COMPRESSING.format(filepath, file_size, FILE_SIZE_LOWER_LIMIT))
             process = subprocess.Popen(['cp', filepath, output_path])
         else:
-            yield COMPRESSING.format(filepath)
+            LOGGER.info(COMPRESSING.format(filepath))
             process = subprocess.Popen(
                 [ghostscript_binary, "-sDEVICE=pdfwrite",
                  "-dCompatabilityLevel=1.4", "-dPDFSETTINGS=/ebook",
@@ -80,12 +82,12 @@ def compress_pdf(filepath, output_path, ghostscript_binary):
         msg = GS_NOT_INSTALLED.format(ghostscript_binary)
         raise FileNotFoundError(msg)
     process.communicate()
-    yield FILE_DONE.format(output_path)
+    LOGGER.info(FILE_DONE.format(output_path))
 
 def compress_multiple_pdfs(source_directory, output_directory, ghostscript_binary):
     """Compress all PDF files in the current directory and place the output in the
-    given output directory. This is a generator function that yields 2*(1+n) status
-    messages, where n is the amount of files to be compressed.
+    given output directory. This is a generator function that first yields the amount
+    of files to be compressed, and then yields the output path of each file.
 
     Args:
         source_directory (str): Filepath to the source directory.
@@ -96,11 +98,8 @@ def compress_multiple_pdfs(source_directory, output_directory, ghostscript_binar
         list(str): paths to outputs.
     """
     source_paths = _get_pdf_filenames_at(source_directory)
-    out_paths = list()
-    yield COMPRESSING_MULTIPLE.format(source_directory, source_directory, len(source_paths))
+    yield len(source_paths)
     for source_path in source_paths:
         output = os.path.join(output_directory, os.path.basename(source_path))
-        out_paths.append(output)
-        yield from compress_pdf(source_path, output, ghostscript_binary)
-    yield ALL_FILES_DONE.format(output_directory)
-    return out_paths
+        compress_pdf(source_path, output, ghostscript_binary)
+        yield output
