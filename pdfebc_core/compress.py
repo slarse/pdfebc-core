@@ -11,6 +11,7 @@ compress PDF files.
 import os
 import sys
 import subprocess
+import daiquiri
 from .misc_utils import if_callable_call_with_formatted_string
 
 BYTES_PER_MEGABYTE = 1024**2
@@ -30,6 +31,8 @@ lower limit for compression is {} bytes"""
 GS_NOT_INSTALLED = """Ghostscript not installed or not aliased to '{}'.
 Exiting ..."""
 
+LOGGER = daiquiri.getLogger(__name__)
+
 def _get_pdf_filenames_at(source_directory):
     """Find all PDF files in the specified directory.
 
@@ -48,28 +51,27 @@ def _get_pdf_filenames_at(source_directory):
             for filename in os.listdir(source_directory)
             if filename.endswith(PDF_EXTENSION)]
 
-def compress_pdf(filepath, output_path, ghostscript_binary, status_callback=None):
+def compress_pdf(filepath, output_path, ghostscript_binary):
     """Compress a single PDF file.
 
     Args:
         filepath (str): Path to the PDF file.
         output_path (str): Output path.
         ghostscript_binary (str): Name/alias of the Ghostscript binary.
-        status_callback (function): A callback function for passing status messages to a view.
 
     Raises:
         ValueError
+        FileNotFoundError
     """
     if not filepath.endswith(PDF_EXTENSION):
         raise ValueError("Filename must end with .pdf!\n%s does not." % filepath)
     try:
         file_size = os.stat(filepath).st_size
         if file_size < FILE_SIZE_LOWER_LIMIT:
-            if_callable_call_with_formatted_string(status_callback, NOT_COMPRESSING,
-                                                   filepath, file_size, FILE_SIZE_LOWER_LIMIT)
+            LOGGER.info(NOT_COMPRESSING.format(filepath, file_size, FILE_SIZE_LOWER_LIMIT))
             process = subprocess.Popen(['cp', filepath, output_path])
         else:
-            if_callable_call_with_formatted_string(status_callback, COMPRESSING, filepath)
+            LOGGER.info(COMPRESSING.format(filepath))
             process = subprocess.Popen(
                 [ghostscript_binary, "-sDEVICE=pdfwrite",
                  "-dCompatabilityLevel=1.4", "-dPDFSETTINGS=/ebook",
@@ -77,31 +79,27 @@ def compress_pdf(filepath, output_path, ghostscript_binary, status_callback=None
                  "-sOutputFile=%s" % output_path, filepath]
                 )
     except FileNotFoundError:
-        if_callable_call_with_formatted_string(status_callback, GS_NOT_INSTALLED,
-                                               ghostscript_binary)
-        sys.exit(1)
+        msg = GS_NOT_INSTALLED.format(ghostscript_binary)
+        raise FileNotFoundError(msg)
     process.communicate()
-    if_callable_call_with_formatted_string(status_callback, FILE_DONE, output_path)
+    LOGGER.info(FILE_DONE.format(output_path))
 
-def compress_multiple_pdfs(source_directory, output_directory, ghostscript_binary, status_callback=None):
-    """Compress all PDF files in the current directory and place the output in the given output directory.
+def compress_multiple_pdfs(source_directory, output_directory, ghostscript_binary):
+    """Compress all PDF files in the current directory and place the output in the
+    given output directory. This is a generator function that first yields the amount
+    of files to be compressed, and then yields the output path of each file.
 
     Args:
         source_directory (str): Filepath to the source directory.
         output_directory (str): Filepath to the output directory.
         ghostscript_binary (str): Name of the Ghostscript binary.
-        status_callback (function): A callback function for passing status messages to a view.
 
     Returns:
         list(str): paths to outputs.
     """
     source_paths = _get_pdf_filenames_at(source_directory)
-    out_paths = list()
-    if_callable_call_with_formatted_string(status_callback, COMPRESSING_MULTIPLE,
-                                           source_directory, output_directory, len(source_paths))
+    yield len(source_paths)
     for source_path in source_paths:
         output = os.path.join(output_directory, os.path.basename(source_path))
-        out_paths.append(output)
-        compress_pdf(source_path, output, ghostscript_binary, status_callback)
-    if_callable_call_with_formatted_string(status_callback, ALL_FILES_DONE, output_directory)
-    return out_paths
+        compress_pdf(source_path, output, ghostscript_binary)
+        yield output

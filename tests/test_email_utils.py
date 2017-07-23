@@ -53,19 +53,11 @@ class EmailUtilsTest(UtilsTestABC):
     @patch('smtplib.SMTP')
     def test_send_files_preconf_valid_files(self, mock_smtp):
         mock_smtp_instance = mock_smtp()
-        mock_status_callback = Mock(return_value=None)
         self.valid_config.write(self.temp_config_file)
         self.temp_config_file.close()
         pdfebc_core.email_utils.send_files_preconf(self.attachment_filenames,
-                                                   config_path=self.temp_config_file.name,
-                                                   status_callback=mock_status_callback)
+                                                   config_path=self.temp_config_file.name)
         mock_smtp_instance.starttls.assert_called_once()
         mock_smtp_instance.login.assert_called_once_with(self.user, self.password)
         mock_smtp_instance.send_message.assert_called_once()
         mock_smtp_instance.quit.assert_called_once()
-        expected_send_message = pdfebc_core.email_utils.SENDING_PRECONF.format(
-            self.user, self.receiver,
-            self.smtp_server, self.smtp_port, '\n'.join(self.attachment_filenames))
-        expected_sent_message = pdfebc_core.email_utils.FILES_SENT
-        mock_status_callback.assert_any_call(expected_send_message)
-        mock_status_callback.assert_any_call(expected_sent_message)

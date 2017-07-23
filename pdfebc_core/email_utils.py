@@ -48,7 +48,6 @@ def send_with_attachments(subject, message, filepaths, config):
     _attach_files(filepaths, email_)
     _send_email(email_, config)
 
-
 def _attach_files(filepaths, email_):
     """Take a list of filepaths and attach the files to a MIMEMultipart.
 
@@ -80,7 +79,7 @@ def _send_email(email_, config):
     server.send_message(email_)
     server.quit()
 
-def send_files_preconf(filepaths, config_path=CONFIG_PATH, status_callback=None):
+def send_files_preconf(filepaths, config_path=CONFIG_PATH):
     """Send files using the config.ini settings.
 
     Args:
@@ -89,11 +88,4 @@ def send_files_preconf(filepaths, config_path=CONFIG_PATH, status_callback=None)
     config = read_config(config_path)
     subject = "PDF files from pdfebc"
     message = ""
-    args = (get_attribute_from_config(config, EMAIL_SECTION_KEY, USER_KEY),
-            get_attribute_from_config(config, EMAIL_SECTION_KEY, RECEIVER_KEY),
-            get_attribute_from_config(config, EMAIL_SECTION_KEY, SMTP_SERVER_KEY),
-            get_attribute_from_config(config, EMAIL_SECTION_KEY, SMTP_PORT_KEY),
-            '\n'.join(filepaths))
-    if_callable_call_with_formatted_string(status_callback, SENDING_PRECONF, *args)
     send_with_attachments(subject, message, filepaths, config)
-    if_callable_call_with_formatted_string(status_callback, FILES_SENT)
