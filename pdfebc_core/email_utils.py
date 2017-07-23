@@ -48,7 +48,6 @@ def send_with_attachments(subject, message, filepaths, config):
     _attach_files(filepaths, email_)
     _send_email(email_, config)
 
-
 def _attach_files(filepaths, email_):
     """Take a list of filepaths and attach the files to a MIMEMultipart.
 
@@ -89,11 +88,4 @@ def send_files_preconf(filepaths, config_path=CONFIG_PATH):
     config = read_config(config_path)
     subject = "PDF files from pdfebc"
     message = ""
-    args = (get_attribute_from_config(config, EMAIL_SECTION_KEY, USER_KEY),
-            get_attribute_from_config(config, EMAIL_SECTION_KEY, RECEIVER_KEY),
-            get_attribute_from_config(config, EMAIL_SECTION_KEY, SMTP_SERVER_KEY),
-            get_attribute_from_config(config, EMAIL_SECTION_KEY, SMTP_PORT_KEY),
-            '\n'.join(filepaths))
-    yield SENDING_PRECONF.format(*args)
     send_with_attachments(subject, message, filepaths, config)
-    yield FILES_SENT

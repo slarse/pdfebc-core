@@ -55,14 +55,8 @@ class EmailUtilsTest(UtilsTestABC):
         mock_smtp_instance = mock_smtp()
         self.valid_config.write(self.temp_config_file)
         self.temp_config_file.close()
-        send_gen = pdfebc_core.email_utils.send_files_preconf(self.attachment_filenames,
+        pdfebc_core.email_utils.send_files_preconf(self.attachment_filenames,
                                                    config_path=self.temp_config_file.name)
-        expected_send_message = pdfebc_core.email_utils.SENDING_PRECONF.format(
-            self.user, self.receiver,
-            self.smtp_server, self.smtp_port, '\n'.join(self.attachment_filenames))
-        expected_sent_message = pdfebc_core.email_utils.FILES_SENT
-        self.assertEqual(expected_send_message, next(send_gen))
-        self.assertEqual(expected_sent_message, next(send_gen))
         mock_smtp_instance.starttls.assert_called_once()
         mock_smtp_instance.login.assert_called_once_with(self.user, self.password)
         mock_smtp_instance.send_message.assert_called_once()
