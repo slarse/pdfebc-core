@@ -80,7 +80,7 @@ def _send_email(email_, config):
     server.send_message(email_)
     server.quit()
 
-def send_files_preconf(filepaths, config_path=CONFIG_PATH, status_callback=None):
+def send_files_preconf(filepaths, config_path=CONFIG_PATH):
     """Send files using the config.ini settings.
 
     Args:
@@ -94,6 +94,6 @@ def send_files_preconf(filepaths, config_path=CONFIG_PATH, status_callback=None)
             get_attribute_from_config(config, EMAIL_SECTION_KEY, SMTP_SERVER_KEY),
             get_attribute_from_config(config, EMAIL_SECTION_KEY, SMTP_PORT_KEY),
             '\n'.join(filepaths))
-    if_callable_call_with_formatted_string(status_callback, SENDING_PRECONF, *args)
+    yield SENDING_PRECONF.format(*args)
     send_with_attachments(subject, message, filepaths, config)
-    if_callable_call_with_formatted_string(status_callback, FILES_SENT)
+    yield FILES_SENT
