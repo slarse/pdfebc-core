@@ -1,3 +1,4 @@
+aiosmtplib
 appdirs>=1.4.3
 codecov>=2.0.9
 daiquiri
