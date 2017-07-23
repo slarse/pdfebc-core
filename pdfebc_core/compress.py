@@ -50,7 +50,7 @@ def _get_pdf_filenames_at(source_directory):
 
 def compress_pdf(filepath, output_path, ghostscript_binary):
     """Compress a single PDF file. This is a generator function that
-    yields two status messages (unless exceptions are reaised).
+    yields two status messages (unless exceptions are raised).
 
     Args:
         filepath (str): Path to the PDF file.
@@ -83,7 +83,9 @@ def compress_pdf(filepath, output_path, ghostscript_binary):
     yield FILE_DONE.format(output_path)
 
 def compress_multiple_pdfs(source_directory, output_directory, ghostscript_binary):
-    """Compress all PDF files in the current directory and place the output in the given output directory.
+    """Compress all PDF files in the current directory and place the output in the
+    given output directory. This is a generator function that yields 2*(1+n) status
+    messages, where n is the amount of files to be compressed.
 
     Args:
         source_directory (str): Filepath to the source directory.
