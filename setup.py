@@ -7,8 +7,8 @@ with open('README.rst') as f:
 with open('LICENSE') as f:
     license = f.read()
 
-test_requirements = ['pytest>=3.1.1', 'pytest-cov>=2.5.1']
-required = ['appdirs>=1.4.3']
+test_requirements = ['pytest>=3.1.1', 'pytest-cov>=2.5.1', 'asynctest']
+required = ['appdirs>=1.4.3', 'aiosmtplib', 'daiquiri']
 
 setup(
     name='pdfebc-core',
