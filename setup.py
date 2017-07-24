@@ -12,14 +12,14 @@ required = ['appdirs>=1.4.3', 'aiosmtplib', 'daiquiri']
 
 setup(
     name='pdfebc-core',
-    version='0.2.0',
+    version='0.3.0',
     description=('Core functions of the pdfebc tools. The pdfebc tools is (going to be) a .'
                  'set of tools for compressing PDF files to e-reader friendly sizes.'),
     long_description=readme,
     author='Simon Larsén',
     author_email='slarse@kth.se',
     url='https://github.com/slarse/pdfebc-core',
-    download_url='https://github.com/slarse/pdfebc-core/archive/v0.2.0.tar.gz',
+    download_url='https://github.com/slarse/pdfebc-core/archive/v0.3.0.tar.gz',
     license=license,
     packages=find_packages(exclude=('tests', 'docs')),
     tests_require=test_requirements,
