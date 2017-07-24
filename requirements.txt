@@ -1,4 +1,6 @@
+aiosmtplib
 appdirs>=1.4.3
+asynctest
 codecov>=2.0.9
 daiquiri
 pytest>=3.1.1
